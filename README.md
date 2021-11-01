@@ -54,6 +54,7 @@ These files must contain one element (word, password) per line.
 
 The 'more data (unused)' folder contains dictionary files available for use.
 By default it is not used by TKPass.
+Download only the files you use because they are quite heavy.
 
 #### How does the password review work ?
 
