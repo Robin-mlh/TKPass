@@ -16,26 +16,29 @@ The results can be copied or exported to a file.
 
 ## Installation
 
+TKPass has been tested on Ubuntu and Windows.
+
 Python 3 is required.
 
 In the same directory as tkp, use the following command to install the dependencies:
 
-    py -m pip install -r requirements.txt
+    python3 -m pip install -r requirements.txt
 
+***On Windows, replace `python3` by `py`.***
 
 ## Usage
 
 To use TKPass:
 
-    py tkp.py
+    python3 tkp.py
 
 For example, to generate a password:
 
-    py tkp.py password
+    python3 tkp.py password
 
 Or to check the strength of the password "qwER43@!":
 
-    py tkp.py check -p qwER43@!
+    python3 tkp.py check -p qwER43@!
 
 Open the config.py file as a text file to change important settings used by TKPass.
 For example the default password generation settings, the files used, the automatic copy and many other things.
