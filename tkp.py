@@ -3,14 +3,16 @@
 """ Password toolkit. """
 
 import sys
+import os
+import configparser
 from secrets import randbelow  # To use random cryptography.
 import argparse  # Module for the command line system.
 
 import pyperclip  # To copy and get the clipboard.
 
 from modules import functions  # Functions.
+from modules.functions import config  # Configuration file.
 from modules.data import *  # Data and text file.
-from config import *  # User configuration file.
 
 
 def required_length(nmin, nmax):
@@ -21,8 +23,7 @@ def required_length(nmin, nmax):
         def __call__(self, parser, args, values, option_string=None):
             if not nmin <= len(values) <= nmax:
                 raise argparse.ArgumentTypeError(
-                    'argument "{f}" requires between {nmin} and {nmax} arguments'.format(
-                        f=self.dest, nmin=nmin, nmax=nmax))
+                      f"argument {self.dest} requires between {nmin} and {nmax} arguments")
             setattr(args, self.dest, values)
     return RequiredLength
 
@@ -35,7 +36,7 @@ def definition_parent_parser():
     parent_parser_generation = argparse.ArgumentParser(add_help=False)
     parent_parser_generation.add_argument("--copy", "-c", action="store_true",
                                           help="Copies the result to the clipboard")
-    parent_parser_generation.add_argument("--hide", "-f", action="store_true",
+    parent_parser_generation.add_argument("--hide", "-H", action="store_true",
                                           help="Does not display the result")
     parent_parser_generation.add_argument("--output", "-o", type=str, metavar="FILE",
                                           default=False, nargs="?", help="Export result to a file")
@@ -50,7 +51,7 @@ class ArgumentParserCustomGlobal(argparse.ArgumentParser):
 A password toolkit.
 
 Commands:
-   check, c       Test the strength of a passw ord
+   check, c       Test the strength of a password
    password, w    Generate a password
    passphrase, p  Generate a passphrase
    sentence, s    Generate a sentence-based password
@@ -125,30 +126,37 @@ class TkpCli(object):
    Generates 7 passwords of 20 characters composed of no capital letters,
    10 lowercase letters, numbers and special characters.""")
         parser.add_argument("-l", type=int, nargs="+", action=required_length(1, 2), metavar="LENGTH",
-                            help="Number of characters in each password. With two numbers,\nthe length will be random between the first and the second")
+                            help="Number of characters in each password. With two numbers,\n"
+                                 "the length will be random between the first and the second")
         parser.add_argument("-a", metavar="NUM_LOWERCASE_LETTERS",
-                            default=DEFAULT_PASSWORD_LOWER_LETTERS,
+                            default=config["PASSWORD"]["DEFAULT_PASSWORD_LOWER_LETTERS"],
                             help="Number of lowercase letters in each password")
         parser.add_argument("-u", metavar="NUM_UPPER_CASE_LETTERS",
-                            default=DEFAULT_PASSWORD_UPPER_LETTERS,
+                            default=config["PASSWORD"]["DEFAULT_PASSWORD_UPPER_LETTERS"],
                             help="Number of capital letters in each password")
         parser.add_argument("-d", metavar="NUM_DIGITS",
-                            default=DEFAULT_PASSWORD_DIGITS,
+                            default=config["PASSWORD"]["DEFAULT_PASSWORD_DIGITS"],
                             help="Number of digits in each password")
         parser.add_argument("-s", metavar="NUM_SPECIAL_SYMBOLS",
-                            default=DEFAULT_PASSWORD_SPECIALS_SYMBOLS,
+                            default=config["PASSWORD"]["DEFAULT_PASSWORD_SPECIALS_SYMBOLS"],
                             help="Number of special symbols in each password")
-        parser.add_argument("-n", type=int, default=DEFAULT_NB_GENERATION,
+        parser.add_argument("-n", type=int, default=config["GLOBAL"]["DEFAULT_NB_GENERATION"],
                             metavar="GENERATION_NUMBER", help="Number of password to generate")
-        parser.add_argument("-b", nargs="+", default=BANNED_CHARACTERS_PASSWORD, metavar="BANNED_CHARACTER",
+        parser.add_argument("-b", nargs="+", default=config["PASSWORD"]["BANNED_CHARACTERS_PASSWORD"],
+                            metavar="BANNED_CHARACTER",
                             help="Characters that cannot be included in the password")
-        parser.add_argument("--passphrase", "-p", type=str, metavar="WORDLIST_FILE", nargs="?",
-                            default=None, const=DEFAULT_WORDLIST_FILE_SENTENCE_PASSWORD,
+        parser.add_argument("--passphrase", "-p", type=str, metavar="WORDLIST_FILE", nargs="?", default=None,
+                            const=config["PASSWORD"]["DEFAULT_WORDLIST_FILE_SENTENCE_PASSWORD"].replace("DICTIONNARY_DIRECTORY",
+                                                                                                config["GLOBAL"]["DICTIONNARY_DIRECTORY"]),
                             help="Generates a phrase based on the password to remember it")
         args = parser.parse_args(sys.argv[2:])
 
         if args.l is None:
-            nb_characters = DEFAULT_PASSWORD_LENGTH
+            if not isinstance((config.getint("PASSWORD", "DEFAULT_PASSWORD_LENGTH")), int):
+                raise SystemExit("ValueError: The password length value to be generated is invalid.\n"
+                                 "Check the value of DEFAULT_PASSWORD_LENGTH in the configuration file.")
+            else:
+                nb_characters = config.getint("PASSWORD", "DEFAULT_PASSWORD_LENGTH")
         elif len(args.l) == 1:
             nb_characters = args.l[0]
         elif len(args.l) == 2:
@@ -166,10 +174,10 @@ class TkpCli(object):
                     wordlist = list(f.read().split("\n"))
                 sentence_password = functions.password_generation_sentence(result, wordlist)
                 print("\n" + sentence_password)
-        if args.copy or AUTO_COPY_GENERATED:
+        if args.copy or config["GLOBAL"]["AUTO_COPY_GENERATED"]:
             pyperclip.copy(result)
         if args.output is None:
-            functions.export_file(result, path=DEFAULT_OUTFILE)
+            functions.export_file(result, path=config["GLOBAL"]["DEFAULT_OUTFILE"])
         elif args.output is not False:
             functions.export_file(result, path=args.output)
 
@@ -185,16 +193,18 @@ class TkpCli(object):
    tkp p -n 2 -l 6 -s '-' -o 'passphrase.txt'
 
    Generate and export to a file 2 passphrases of 6 words separated by a dash.""")
-        parser.add_argument("--separator", "-s", type=str, default=DEFAUT_SEPARATOR_PASSPHRASE,
+        parser.add_argument("--separator", "-s", type=str, default=config["PASSPHRASE"]["DEFAUT_SEPARATOR_PASSPHRASE"],
                             help="Character between words")
-        parser.add_argument("--generation-number", "-n", type=int, default=DEFAULT_NB_GENERATION,
+        parser.add_argument("--generation-number", "-n", type=int, default=config["GLOBAL"]["DEFAULT_NB_GENERATION"],
                             help="Number of passphrase to generate")
         parser.add_argument("--words-number", "-l", type=int, nargs="+", action=required_length(1, 2),
                             help="Number of words in each passphrase")
         parser.add_argument("-u", action="store_true", help="Capitalizes the first letter of each word")
         parser.add_argument("-w", type=int, default=0, help="Number of symbols (default: 0)", metavar="NUM_SYMBOLS")
         parser.add_argument("-d", type=int, default=0, help="Number of digits (default: 0)", metavar="NUM_DIGITS")
-        parser.add_argument("--wordlist", "-i", type=str, metavar="FILE", default=DEFAULT_WORDLIST_FILE_PASSPHRASE,
+        parser.add_argument("--wordlist", "-i", type=str, metavar="FILE",
+                            default=config["PASSPHRASE"]["DEFAULT_WORDLIST_FILE_PASSPHRASE"].replace("DICTIONNARY_DIRECTORY",
+                                                                                                     config["GLOBAL"]["DICTIONNARY_DIRECTORY"]),
                             help="List of words to be used for the generation of the passphrase")
         args = parser.parse_args(sys.argv[2:])
 
@@ -203,7 +213,7 @@ class TkpCli(object):
         # Definition of the number of words
         # to put in the passphrase according to the user's arguments.
         if args.words_number is None:
-            nb_words = DEFAULT_NB_WORDS_PASSPHRASE
+            nb_words = config.getint("PASSPHRASE", "DEFAULT_NB_WORDS_PASSPHRASE")
         elif len(args.words_number) == 1:
             nb_words = args.words_number[0]
         elif len(args.words_number) == 2:
@@ -217,10 +227,10 @@ class TkpCli(object):
         # Initialization of the arguments used after the generation of the result.
         if not args.hide:
             print(result)
-        if args.copy or AUTO_COPY_GENERATED:
+        if args.copy or config["GLOBAL"]["AUTO_COPY_GENERATED"]:
             pyperclip.copy(result)
         if args.output is None:
-            functions.export_file(result, path=DEFAULT_OUTFILE)
+            functions.export_file(result, path=config["GLOBAL"]["DEFAULT_OUTFILE"])
         elif args.output is not False:
             functions.export_file(result, path=args.output)
 
@@ -242,10 +252,10 @@ class TkpCli(object):
         result = functions.password_from_sentence(args.sentence)
         if not args.hide:
             print(result)
-        if args.copy or AUTO_COPY_GENERATED:
+        if args.copy or config["GLOBAL"]["AUTO_COPY_GENERATED"]:
             pyperclip.copy(result)
         if args.output is None:
-            functions.export_file(result, path=DEFAULT_OUTFILE)
+            functions.export_file(result, path=config["GLOBAL"]["DEFAULT_OUTFILE"])
         elif args.output is not False:
             functions.export_file(result, path=args.output)
 
