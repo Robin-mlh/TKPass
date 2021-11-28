@@ -1,5 +1,5 @@
 # Current version of TKPass.
-VERSION_TKP = "1.0"
+VERSION_TKP = "1.1"
 
 # Lowercase alphabet.
 ALPHA_MIN = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l",
