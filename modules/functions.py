@@ -1,25 +1,31 @@
-from secrets import choice, randbelow  # To use random cryptography.
+from secrets import choice, randbelow
+import configparser
+import os
 
-# Module that estimates the reliability of a password in a realistic and advanced way.
 from zxcvbn import zxcvbn
 from zxcvbn.matching import add_frequency_lists
 
-from modules.data import *  # Data and text file
-from config import *  # User configuration file
+from modules.data import *
 
-os.chdir(os.getcwd())
+# User configuration file.
+config = configparser.ConfigParser()
+config.read(os.path.realpath(__file__)[:-21] + os.sep + 'tkp.conf')
+config["GLOBAL"]["DICTIONNARY_DIRECTORY"] = config["GLOBAL"]["DICTIONNARY_DIRECTORY"].replace("PROG_PATH",
+                                                                                              os.path.realpath(__file__)[:-21])
 
 
-def export_file(content, path=DEFAULT_OUTFILE):
+def export_file(content, path):
     """ Export the content to a file. """
 
-    continu = True
     if os.path.exists(path):
-        if input(path  + " already exists. Do you want to overwrite it? (N/y)\n") != "y":
-            continu = False
-    if continu:
+        if input(f"\n{path} already exists. Do you want to overwrite it? (N/y)\n") != "y":
+            return False
+    try:
         with open(path, "w") as f:
             f.write(content)
+        print("File successfully written.")
+    except Exception as e:
+        raise SystemExit(f"Unable to write the file: {e}")
 
 
 def check_password(password, infos_sup=None, files_wordlists=[]):
@@ -28,8 +34,8 @@ def check_password(password, infos_sup=None, files_wordlists=[]):
     # --- Load the dictionaries and add them to zxcvbn.
     dict_wordlists = {}
     # Default location dictionaries (defined in the config file).
-    for file_name in os.listdir(DICTIONNARY_DIRECTORY):
-        with open(DICTIONNARY_DIRECTORY + file_name, "r") as f:
+    for file_name in os.listdir(config["GLOBAL"]["DICTIONNARY_DIRECTORY"]):
+        with open(config["GLOBAL"]["DICTIONNARY_DIRECTORY"] + os.sep + file_name, "r") as f:
             list_actual_dict = f.read().split("\n")[:-1]
         dict_wordlists[os.path.splitext(file_name)[0]] = list_actual_dict
         add_frequency_lists(dict_wordlists)
@@ -43,11 +49,13 @@ def check_password(password, infos_sup=None, files_wordlists=[]):
         add_frequency_lists(dict_wordlists)
 
     # --- Gets the password results with zxcvbn and displays the score.
+    if not password:
+        raise SystemExit("ValueError: The password is empty.")
     result = zxcvbn(password, infos_sup)
     print("    " + SCORE_TO_WORD[result["score"]] + " (" + str(result["score"]) + "/4)")
 
     # --- Shows the estimated time.
-    print("\n" + "Estimated time needed to guess the password: ")
+    print("\nEstimated time needed to guess the password: ")
     print("    Fast hashing with many processors (1e10/s) : ",
           result["crack_times_display"]["offline_fast_hashing_1e10_per_second"])
     print("    Slow hashing with many processors (1e4/s) :  ",
@@ -123,7 +131,7 @@ def check_password(password, infos_sup=None, files_wordlists=[]):
 
 
 def password_from_sentence(sentence):
-    """Create a phrase-based password.
+    """ Create a phrase-based password.
 
     Remember the sentence to remember the password.
     The first letters of each word are added to the password,
@@ -136,6 +144,8 @@ def password_from_sentence(sentence):
        password(s) (str)
     """
 
+    if not sentence:
+        raise SystemExit("ValueError: The sentence is empty.")
     password = ""
     if sentence[0] in ALPHA_MAJ or sentence[0] in ALPHA_MIN:
         password += sentence[0]
