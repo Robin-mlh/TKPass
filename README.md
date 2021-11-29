@@ -28,20 +28,37 @@ In the same directory as tkp, use the following command to install the dependenc
 
 ## Usage
 
-To use TKPass:
+*In the TKPass repertory:*
+
+On ***Linux***:
 
     python3 tkp.py
+    
+Or execute it once you have given it the permissions:
 
+    sudo chmod +x tkp.py
+    ./tkp.py
+
+On ***Windows***:
+
+    py tkp.py
+
+To see the program usage:
+
+    ./tkp.py --help
+    
 For example, to generate a password:
 
-    python3 tkp.py password
+    ./tkp.py password
 
 Or to check the strength of the password "qwER43@!":
 
-    python3 tkp.py check -p qwER43@!
+    ./tkp.py check -p qwER43@!
 
-Open the config.py file as a text file to change important settings used by TKPass.
-For example the default password generation settings, the files used, the automatic copy and many other things.
+
+### Open the configuration file `tkp.conf` to change important settings used by TKPass.
+For example, the default password generation settings, the files used, the automatic copy and many other things.
+
 
 ## FAQ
 
