@@ -10,8 +10,9 @@ from modules.data import *
 # User configuration file.
 config = configparser.ConfigParser()
 config.read(os.path.realpath(__file__)[:-21] + os.sep + 'tkp.conf')
-config["GLOBAL"]["DICTIONNARY_DIRECTORY"] = config["GLOBAL"]["DICTIONNARY_DIRECTORY"].replace("PROG_PATH",
-                                                                                              os.path.realpath(__file__)[:-21])
+replace_path = config["GLOBAL"]["DICTIONNARY_DIRECTORY"].replace("PROG_PATH",
+                                                                 os.path.realpath(__file__)[:-21])
+config["GLOBAL"]["DICTIONNARY_DIRECTORY"] = replace_path
 
 
 def export_file(content, path):
