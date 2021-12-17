@@ -4,6 +4,7 @@
 
 import sys
 import os
+import getpass
 import configparser
 from secrets import randbelow  # To use random cryptography.
 import argparse  # Module for the command line system.
@@ -35,7 +36,7 @@ def definition_parent_parser():
     global parent_parser_generation
     parent_parser_generation = argparse.ArgumentParser(add_help=False)
     parent_parser_generation.add_argument("--copy", "-c", action="store_true",
-                                          help="Copies the result to the clipboard")
+                                          help="Copiy the result to the clipboard")
     parent_parser_generation.add_argument("--hide", "-H", action="store_true",
                                           help="Does not display the result")
     parent_parser_generation.add_argument("--output", "-o", type=str, metavar="FILE",
@@ -91,13 +92,15 @@ class TkpCli(object):
 
     def check(self):
         parser = argparse.ArgumentParser(description="Test the strength of a password.",
-                                         usage="tkp.py {check|c} [-h] {-p PASSWORD | --clipboard}"
-                                               " [-i INFO [INFO ...]]\n       [ --wordlist FILE [FILE ...]]")
-        group_check_password = parser.add_mutually_exclusive_group(required=True)
+                                         usage="tkp.py {check|c} [-h] [-p PASSWORD | --getpass | --clipboard]"
+                                               "\n       [-i INFO [INFO ...]] [--wordlist FILE [FILE ...]]")
+        group_check_password = parser.add_mutually_exclusive_group(required=False)
         group_check_password.add_argument("--password", "-p", metavar="PASSWORD", type=str,
-                                          help="the password to check")
+                                          help="The password to check")
+        group_check_password.add_argument("--getpass", "-g", action="store_true",
+                                          help="Use the getpass function to securely ask for the password")
         group_check_password.add_argument("--clipboard", "-c", action="store_true",
-                                          help="uses the clipboard as password")
+                                          help="Use the clipboard as password")
         parser.add_argument("--info", "-i", type=str, nargs="+",
                             help="Additional information. For example, a name or a date of birth")
         parser.add_argument("--wordlist", "-w", type=argparse.FileType('r'),
@@ -105,10 +108,13 @@ class TkpCli(object):
                             help="Additional word list files to load")
         args = parser.parse_args(sys.argv[2:])
 
-        if args.password is not None:
+        if args.password not in [False, None]:
             password = args.password
-        elif args.clipboard is not None:
+        elif args.clipboard not in [False, None]:
             password = pyperclip.paste()
+        else:
+            password = getpass.getpass()
+            print()
         functions.check_password(password, infos_sup=args.info, files_wordlists=args.wordlist)
 
 
@@ -148,7 +154,7 @@ class TkpCli(object):
         parser.add_argument("--passphrase", "-p", type=str, metavar="WORDLIST_FILE", nargs="?", default=None,
                             const=config["PASSWORD"]["DEFAULT_WORDLIST_FILE_SENTENCE_PASSWORD"].replace("DICTIONNARY_DIRECTORY",
                                                                                                 config["GLOBAL"]["DICTIONNARY_DIRECTORY"]),
-                            help="Generates a phrase based on the password to remember it")
+                            help="Generate a phrase based on the password to remember it")
         args = parser.parse_args(sys.argv[2:])
 
         if args.l is None:
@@ -188,7 +194,7 @@ class TkpCli(object):
                                                "\n       [-i WORDLIST_FILE] [-s SEPARATOR] [-n GENERATION_NUMBER] [-o [OUTFILE]]",
                                          parents=[parent_parser_generation],
                                          formatter_class=argparse.RawTextHelpFormatter,
-                                         description="Generates a cryptographically random passphrase.",
+                                         description="Generats a cryptographically random passphrase.",
                                          epilog="""Example:
    tkp p -n 2 -l 6 -s '-' -o 'passphrase.txt'
 
@@ -199,7 +205,7 @@ class TkpCli(object):
                             help="Number of passphrase to generate")
         parser.add_argument("--words-number", "-l", type=int, nargs="+", action=required_length(1, 2),
                             help="Number of words in each passphrase")
-        parser.add_argument("-u", action="store_true", help="Capitalizes the first letter of each word")
+        parser.add_argument("-u", action="store_true", help="Capitalize the first letter of each word")
         parser.add_argument("-w", type=int, default=0, help="Number of symbols (default: 0)", metavar="NUM_SYMBOLS")
         parser.add_argument("-d", type=int, default=0, help="Number of digits (default: 0)", metavar="NUM_DIGITS")
         parser.add_argument("--wordlist", "-i", type=str, metavar="FILE",
@@ -237,7 +243,7 @@ class TkpCli(object):
 
     def sentence(self):
         parser = argparse.ArgumentParser(usage="""tkp.py {sentence|s} [-cfh] [--output [FILE]] SENTENCE""",
-                                         description="Generates a phrase-based password."
+                                         description="Generate a phrase-based password."
                                                      "\nRemember the sentence to remember the password.",
                                          parents=[parent_parser_generation],
                                          formatter_class=argparse.RawTextHelpFormatter,
