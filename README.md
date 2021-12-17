@@ -51,9 +51,9 @@ For example, to generate a password:
 
     ./tkp.py password
 
-Or to check the strength of the password "qwER43@!":
+Or to check its strength:
 
-    ./tkp.py check -p qwER43@!
+    ./tkp.py check
 
 
 ### Open the configuration file `tkp.conf` to change important settings used by TKPass.
