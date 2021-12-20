@@ -92,13 +92,15 @@ class TkpCli(object):
 
     def check(self):
         parser = argparse.ArgumentParser(description="Test the strength of a password.",
+                                         formatter_class=argparse.RawTextHelpFormatter,
                                          usage="tkp.py {check|c} [-h] [-p PASSWORD | --getpass | --clipboard]"
                                                "\n       [-i INFO [INFO ...]] [--wordlist FILE [FILE ...]]")
         group_check_password = parser.add_mutually_exclusive_group(required=False)
         group_check_password.add_argument("--password", "-p", metavar="PASSWORD", type=str,
                                           help="The password to check")
         group_check_password.add_argument("--getpass", "-g", action="store_true",
-                                          help="Use the getpass function to securely ask for the password")
+                                          help="Use the getpass function to securely ask for the password"
+                                                "\nDefault method used to get the password.")
         group_check_password.add_argument("--clipboard", "-c", action="store_true",
                                           help="Use the clipboard as password")
         parser.add_argument("--info", "-i", type=str, nargs="+",
