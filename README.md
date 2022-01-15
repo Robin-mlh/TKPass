@@ -18,7 +18,7 @@ The results can be copied or exported to a file.
 
 TKPass has been tested on Ubuntu and Windows.
 
-Python 3 is required.
+Python 3.6+ is required.
 
 In the same directory as tkp, use the following command to install the dependencies:
 
@@ -80,9 +80,10 @@ Download only the files you use because they are quite heavy.
 
 The zxcvbn module is used because it offers a realistic and advanced estimation of the security of a password.
 
-#### I don't trust you. tkp will share my password.
+#### It's not safe to enter my password in an unknown program.
 
- If you don't want to use your real password in TKPass, replace the one with characters of the same type.
+Absolutely everything is done locally in the TKPass operations. The source code is easy enough to check this.
+Alternatively, you can enter a password with the same attributes.
 
 #### How to edit the password generation configuration used by default ?
 
