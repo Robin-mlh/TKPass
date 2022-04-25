@@ -47,7 +47,7 @@ def definition_parent_parser():
 class ArgumentParserCustomGlobal(argparse.ArgumentParser):
 
      def format_help(self):
-         return """Usage: tkp.py [GLOBAL_OPTION] COMMAND [COMMAND_ARGUMENT]...
+         return """Usage: tkp.py [COMMAND] [OPTION]...
 
 A password toolkit.
 
@@ -58,12 +58,11 @@ Commands:
    sentence, s    Generate a sentence-based password
    doc            Shows safety recommendations and tkp sources
 
-Command arguments:
-   COMMAND -h     Show help related to the command
-
-Global options:
+Options:
    -h, --help     Show this help message and exit
    -v, --version  Show program's version number and exit
+   
+Use "tkp.py [COMMAND] --help" for more information about a command.
 """
 
 
@@ -71,8 +70,8 @@ class TkpCli(object):
     """ Command line system.  """
 
     def __init__(self):
-        parser = ArgumentParserCustomGlobal(description="""A password toolkit.""",
-                                            usage="""tkp.py [GLOBAL_OPTION] COMMAND [COMMAND_ARGUMENT]...""")
+        parser = ArgumentParserCustomGlobal(description="A password toolkit.",
+                                            usage="""tkp.py [COMMAND] [OPTION]...""")
         parser.add_argument("-v", "--version", action='version', version='TKPass '+VERSION_TKP)
         parser.add_argument('command', metavar="COMMAND", help='command')
         if len(sys.argv) == 1:
@@ -92,7 +91,6 @@ class TkpCli(object):
 
     def check(self):
         parser = argparse.ArgumentParser(description="Test the strength of a password.",
-                                         formatter_class=argparse.RawTextHelpFormatter,
                                          usage="tkp.py {check|c} [-h] [-p PASSWORD | --getpass | --clipboard]"
                                                "\n       [-i INFO [INFO ...]] [--wordlist FILE [FILE ...]]")
         group_check_password = parser.add_mutually_exclusive_group(required=False)
@@ -113,7 +111,10 @@ class TkpCli(object):
         if args.password not in [False, None]:
             password = args.password
         elif args.clipboard not in [False, None]:
-            password = pyperclip.paste()
+            try:
+                password = pyperclip.paste()
+            except pyperclip.PyperclipException as e:
+                raise SystemExit(f"An error has occurred: the clipboard does not exist or cannot be reached. {e}")
         else:
             password = getpass.getpass()
             print()
@@ -130,7 +131,6 @@ class TkpCli(object):
                                                           "\nUse the command without argument to use the default configuration.",
                                               epilog="""Example:
    tkp w -n 7 -l 20 -a 10 -u 0
-
    Generates 7 passwords of 20 characters composed of no capital letters,
    10 lowercase letters, numbers and special characters.""")
         parser.add_argument("-l", type=int, nargs="+", action=required_length(1, 2), metavar="LENGTH",
@@ -182,8 +182,11 @@ class TkpCli(object):
                     wordlist = list(f.read().split("\n"))
                 sentence_password = functions.password_generation_sentence(result, wordlist)
                 print("\n" + sentence_password)
-        if args.copy or config["GLOBAL"]["AUTO_COPY_GENERATED"]:
-            pyperclip.copy(result)
+        if args.copy or config.getboolean('GLOBAL', 'AUTO_COPY_GENERATED'):
+            try:
+                pyperclip.copy(result)
+            except pyperclip.PyperclipException as e:
+                raise SystemExit(f"An error has occurred: the clipboard does not exist or cannot be reached. {e}")
         if args.output is None:
             functions.export_file(result, path=config["GLOBAL"]["DEFAULT_OUTFILE"])
         elif args.output is not False:
@@ -199,7 +202,6 @@ class TkpCli(object):
                                          description="Generats a cryptographically random passphrase.",
                                          epilog="""Example:
    tkp p -n 2 -l 6 -s '-' -o 'passphrase.txt'
-
    Generate and export to a file 2 passphrases of 6 words separated by a dash.""")
         parser.add_argument("--separator", "-s", type=str, default=config["PASSPHRASE"]["DEFAUT_SEPARATOR_PASSPHRASE"],
                             help="Character between words")
@@ -235,8 +237,11 @@ class TkpCli(object):
         # Initialization of the arguments used after the generation of the result.
         if not args.hide:
             print(result)
-        if args.copy or config["GLOBAL"]["AUTO_COPY_GENERATED"]:
-            pyperclip.copy(result)
+        if args.copy or config.getboolean('GLOBAL', 'AUTO_COPY_GENERATED'):
+            try:
+                pyperclip.copy(result)
+            except pyperclip.PyperclipException as e:
+                raise SystemExit(f"An error has occurred: the clipboard does not exist or cannot be reached. {e}")
         if args.output is None:
             functions.export_file(result, path=config["GLOBAL"]["DEFAULT_OUTFILE"])
         elif args.output is not False:
@@ -251,7 +256,6 @@ class TkpCli(object):
                                          formatter_class=argparse.RawTextHelpFormatter,
                                          epilog="""Exemple:
    tkp s 'Lorem ipsum dolor 66 sit amet!' -c
-
    Generate and copy the password created using the sentence given as an argument.""")
         parser.add_argument("sentence", metavar="SENTENCE", type=str,
                             help="Sentence")
@@ -260,8 +264,11 @@ class TkpCli(object):
         result = functions.password_from_sentence(args.sentence)
         if not args.hide:
             print(result)
-        if args.copy or config["GLOBAL"]["AUTO_COPY_GENERATED"]:
-            pyperclip.copy(result)
+        if args.copy or config.getboolean('GLOBAL', 'AUTO_COPY_GENERATED'):
+            try:
+                pyperclip.copy(result)
+            except pyperclip.PyperclipException as e:
+                raise SystemExit(f"An error has occurred: the clipboard does not exist or cannot be reached. {e}")
         if args.output is None:
             functions.export_file(result, path=config["GLOBAL"]["DEFAULT_OUTFILE"])
         elif args.output is not False:
