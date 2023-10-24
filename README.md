@@ -12,15 +12,14 @@
  - __Generate a password from a phrase.__ Remember the sentence to remember the password.
  - __Show password security recommendations__ and sources used.
 
-The results can be copied or exported to a file.
+![help](help.png)
 
 ## Installation
 
-TKPass has been tested on Ubuntu and Windows.
-
+TKPass has been tested on Fedora, Ubuntu and Windows.
 Python 3.6+ is required.
 
-In the same directory as tkp, use the following command to install the dependencies:
+In the same directory as tkp, use the following command to install dependencies:
 
     python3 -m pip install -r requirements.txt
 
@@ -30,7 +29,7 @@ In the same directory as tkp, use the following command to install the dependenc
 
 *In the TKPass repertory:*
 
-On ***Linux***:
+### On Linux:
 
     python3 tkp.py
     
@@ -39,9 +38,11 @@ Or execute it once you have given it the permissions:
     sudo chmod +x tkp.py
     ./tkp.py
 
-On ***Windows***:
+### On Windows:
 
     py tkp.py
+
+---
 
 To see the program usage:
 
@@ -62,6 +63,11 @@ For example, the default password generation settings, the files used, the autom
 
 ## FAQ
 
+#### How does the password review work ?
+
+The zxcvbn module is used because it offers a realistic and advanced estimation of the security of a password.
+Read more here: https://dropbox.tech/security/zxcvbn-realistic-password-strength-estimation
+
 #### What is the Exposure report section in the password check ?
 
 The exposure report shows the correspondences between the terms of the loaded dictionaries and the password.
@@ -73,16 +79,12 @@ These files must contain one element (word, password) per line.
 #### Why is there a 'more data (unused)' folder ?
 
 The 'more data (unused)' folder contains dictionary files available for use.
-By default it is not used by TKPass.
+By default, it is not used by TKPass.
 Download only the files you use because they are quite heavy.
-
-#### How does the password review work ?
-
-The zxcvbn module is used because it offers a realistic and advanced estimation of the security of a password.
 
 #### It's not safe to enter my password in an unknown program.
 
-Absolutely everything is done locally in the TKPass operations. The source code is easy enough to check this.
+Absolutely everything is done locally in the TKPass operations. The source code is easy enough to check review.
 Alternatively, you can enter a password with the same attributes.
 
 #### How to edit the password generation configuration used by default ?

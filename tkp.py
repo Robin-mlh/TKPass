@@ -1,19 +1,27 @@
 #!/usr/bin/python3
 
-""" Password toolkit. """
+""" Password toolkit. https://github.com/Robin-mlh/TKPass """
 
 import sys
 import os
 import getpass
 import configparser
-from secrets import randbelow  # To use random cryptography.
-import argparse  # Module for the command line system.
+import argparse
+import readline
+from signal import signal, SIGINT
+from secrets import randbelow
 
-import pyperclip  # To copy and get the clipboard.
+import pyperclip
 
-from modules import functions  # Functions.
-from modules.functions import config  # Configuration file.
-from modules.data import *  # Data and text file.
+from modules import functions
+from modules.functions import config
+from modules.data import *
+
+
+def signal_handler(signal, frame):
+    """ Gracefuly ctrl+c handling. """
+
+    sys.exit(0)
 
 
 def required_length(nmin, nmax):
@@ -36,18 +44,17 @@ def definition_parent_parser():
     global parent_parser_generation
     parent_parser_generation = argparse.ArgumentParser(add_help=False)
     parent_parser_generation.add_argument("--copy", "-c", action="store_true",
-                                          help="Copiy the result to the clipboard")
+                                          help="Copy the result to the clipboard")
     parent_parser_generation.add_argument("--hide", "-H", action="store_true",
-                                          help="Does not display the result")
+                                          help="Do not show the result")
     parent_parser_generation.add_argument("--output", "-o", type=str, metavar="FILE",
                                           default=False, nargs="?", help="Export result to a file")
 
 
 # Modification of argparse.ArgumentParser to customize the global help message.
 class ArgumentParserCustomGlobal(argparse.ArgumentParser):
-
-     def format_help(self):
-         return """Usage: tkp.py [COMMAND] [OPTION]...
+    def format_help(self):
+        return """Usage: tkp.py COMMAND [OPTION]...
 
 A password toolkit.
 
@@ -56,13 +63,13 @@ Commands:
    password, w    Generate a password
    passphrase, p  Generate a passphrase
    sentence, s    Generate a sentence-based password
-   doc            Shows safety recommendations and tkp sources
+   doc            Show safety recommendations and tkp sources
 
-Options:
-   -h, --help     Show this help message and exit
+Global options:
+   -h, --help     Show help message and exit
    -v, --version  Show program's version number and exit
-   
-Use "tkp.py [COMMAND] --help" for more information about a command.
+
+Use `tkp.py COMMAND --help` to show help on a specific command.
 """
 
 
@@ -71,7 +78,7 @@ class TkpCli(object):
 
     def __init__(self):
         parser = ArgumentParserCustomGlobal(description="A password toolkit.",
-                                            usage="""tkp.py [COMMAND] [OPTION]...""")
+                                            usage="""tkp.py COMMAND [OPTION]...""")
         parser.add_argument("-v", "--version", action='version', version='TKPass '+VERSION_TKP)
         parser.add_argument('command', metavar="COMMAND", help='command')
         if len(sys.argv) == 1:
@@ -88,7 +95,6 @@ class TkpCli(object):
         # Executes the corresponding method to a command.
         getattr(self, args.command)()
 
-
     def check(self):
         parser = argparse.ArgumentParser(description="Test the strength of a password.",
                                          usage="tkp.py {check|c} [-h] [-p PASSWORD | --getpass | --clipboard]"
@@ -98,7 +104,7 @@ class TkpCli(object):
                                           help="The password to check")
         group_check_password.add_argument("--getpass", "-g", action="store_true",
                                           help="Use the getpass function to securely ask for the password"
-                                                "\nDefault method used to get the password.")
+                                               "\nDefault method used to get the password.")
         group_check_password.add_argument("--clipboard", "-c", action="store_true",
                                           help="Use the clipboard as password")
         parser.add_argument("--info", "-i", type=str, nargs="+",
@@ -110,16 +116,17 @@ class TkpCli(object):
 
         if args.password not in [False, None]:
             password = args.password
+            print()  # Sauter une ligne.
         elif args.clipboard not in [False, None]:
             try:
                 password = pyperclip.paste()
+                print()  # Sauter une ligne.
             except pyperclip.PyperclipException as e:
                 raise SystemExit(f"An error has occurred: the clipboard does not exist or cannot be reached. {e}")
         else:
             password = getpass.getpass()
             print()
         functions.check_password(password, infos_sup=args.info, files_wordlists=args.wordlist)
-
 
     def password(self):
         parser = argparse.ArgumentParser(parents=[parent_parser_generation],
@@ -192,7 +199,6 @@ class TkpCli(object):
         elif args.output is not False:
             functions.export_file(result, path=args.output)
 
-
     def passphrase(self):
         parser = argparse.ArgumentParser(usage="tkp.py {passphrase|p} [-cdfhuw]"
                                                " [-l {WORDS_NUMBER | MIN_NUM_WORDS MAX_NUM_WORDS}]"
@@ -247,7 +253,6 @@ class TkpCli(object):
         elif args.output is not False:
             functions.export_file(result, path=args.output)
 
-
     def sentence(self):
         parser = argparse.ArgumentParser(usage="""tkp.py {sentence|s} [-cfh] [--output [FILE]] SENTENCE""",
                                          description="Generate a phrase-based password."
@@ -274,11 +279,9 @@ class TkpCli(object):
         elif args.output is not False:
             functions.export_file(result, path=args.output)
 
-
     def doc(self):
         parser = argparse.ArgumentParser(usage="tkp.py doc [-h]",
                                          description="Show safety recommandations and TKPass sources.")
-        args = parser.parse_args(sys.argv[2:])
 
         print(PASSWORD_DOCUMENTATION)
 
@@ -297,4 +300,5 @@ class TkpCli(object):
 
 
 if __name__ == '__main__':
+    signal(SIGINT, signal_handler)  # gracefuly ctrl+c handling.
     TkpCli()
