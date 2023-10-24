@@ -1,6 +1,7 @@
-from secrets import choice, randbelow
 import configparser
 import os
+from secrets import choice, randbelow
+from math import log
 
 from zxcvbn import zxcvbn
 from zxcvbn.matching import add_frequency_lists
@@ -53,7 +54,8 @@ def check_password(password, infos_sup=None, files_wordlists=[]):
     if not password:
         raise SystemExit("ValueError: The password is empty.")
     result = zxcvbn(password, infos_sup)
-    print("    " + SCORE_TO_WORD[result["score"]] + " (" + str(result["score"]) + "/4)")
+    print(f"    Entropy: {round(log(result['guesses'], 2), 1)}"
+          f"             {SCORE_TO_WORD[result['score']]} ({str(result['score'])}/4)")
 
     # --- Shows the estimated time.
     print("\nEstimated time needed to guess the password: ")
@@ -167,7 +169,7 @@ def password_generation(lowercase_letters=None, upper_case_letters=None, digits=
 
     Arguments:
        lowercase_letters  -- Number of lowercase letters (int or '' to select the value randomly).
-       upper_case_letters -- Number of of capital letters (int or '' to select the value randomly).
+       upper_case_letters -- Number of capital letters (int or '' to select the value randomly).
        digits             -- Number of figures (int or '' to select the value randomly).
        special_symbols    -- Number of special symbols (int or '' to select the value randomly).
        nb_characters      -- Total number of characters for each password (int).
@@ -193,28 +195,28 @@ def password_generation(lowercase_letters=None, upper_case_letters=None, digits=
             if lowercase_letters == "":
                 list_loto = [*list_loto, *alpha_min]
             else:
-                for nb_lower_letters in range(int(lowercase_letters)):
+                for _ in range(int(lowercase_letters)):
                     password.append(choice(alpha_min))
         if upper_case_letters is not None:
             if upper_case_letters == "":
                 list_loto = [*list_loto, *alpha_maj]
             else:
-                for nb_upper_letters in range(int(upper_case_letters)):
+                for _ in range(int(upper_case_letters)):
                     password.append(choice(alpha_maj))
         if digits is not None:
             if digits == "":
                 list_loto = [*list_loto, *chiffres]
             else:
-                for nb_digits in range(int(digits)):
+                for _ in range(int(digits)):
                     password.append(choice(chiffres))
         if special_symbols is not None:
             if special_symbols == "":
                 list_loto = [*list_loto, *caracts_speciaux]
             else:
-                for nb_symbols in range(int(special_symbols)):
+                for _ in range(int(special_symbols)):
                     password.append(choice(caracts_speciaux))
         if nb_characters is not None and len(list_loto) > 0:
-            for remaining_length in range(int(nb_characters) - len(password)):
+            for _ in range(int(nb_characters) - len(password)):
                 password.append(choice(list_loto))
 
         # Shuffle the password (list) securely.
@@ -289,14 +291,14 @@ def passphrase_generation(wordlist, nb_words, sep, generation_number,
     total_passphrases = []
     for npp in range(generation_number):
         passphrase = []
-        for nwords in range(nb_words):
+        for _ in range(nb_words):
             word = choice(wordlist) + sep
             if capitalization:
                 word = word[0].upper()
             passphrase.append(word)
-        for nb_digits in range(digits):
+        for _ in range(digits):
             passphrase.append(choice(NUMBERS))
-        for nb_symbols in range(symbols):
+        for _ in range(symbols):
             passphrase.append(choice(CARACTS_SPE))
         # Shuffle the passphrase (list) securely.
         for i in reversed(range(1, len(passphrase))):

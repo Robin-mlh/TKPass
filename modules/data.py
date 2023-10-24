@@ -1,14 +1,15 @@
 # Current version of TKPass.
-VERSION_TKP = "1.1"
+VERSION_TKP = "1.2"
 
 # Lowercase alphabet.
 ALPHA_MIN = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l",
              "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"]
 # Capital alphabet.
-ALPHA_MAJ = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L",
-             "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"]
+ALPHA_MAJ = [l.upper() for l in ALPHA_MIN]
+
 # Numbers.
 NUMBERS = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
+
 # Special characters.
 CARACTS_SPE = ["&", "~", '"', "#", "'", "{", "(", "[", "-", "|", "`", "_", "^",
                "@", ")", "]", "°", "+", "=", "}", "¨", "£", "$", "¤", "%", "µ",
@@ -48,6 +49,7 @@ PASSWORD_DOCUMENTATION = (
     "\n  Check if you are concerned by a data leak:  haveibeenpwned.com"
     "\n\n\n  Sources:"
     "\n\n    dropbox.tech/security/zxcvbn-realistic-password-strength-estimation"
+    "\n    https://lowe.github.io/tryzxcvbn/"
     "\n    github.com/howsecureismypassword"
     "\n    blog.mozilla.org/firefox/en/stay-in-good-health-online-but-not-quite"
     "\n    ssi.gouv.fr/guide/password"
